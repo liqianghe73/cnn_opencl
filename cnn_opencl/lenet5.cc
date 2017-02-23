@@ -139,7 +139,6 @@ lenet5::lenet5(parameters* _params)
 	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
   }  
 
-#if 0
   // - pooling layer P2 -
   cout << "--- 2.1 creating P2 neurons ---" << endl;  
   // There are 6 feature maps in P2;
@@ -175,19 +174,19 @@ lenet5::lenet5(parameters* _params)
 		h_conv1_pooling2_coefficient[fo] = conv1_pooling2.at(fo)->coefficient; 
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_neurons, size_of_h_pooling2_neurons * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_bias_weight,params->get_int("nb_featuremap_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_bias_weight_hessian,params->get_int("nb_featuremap_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_coefficient,params->get_int("nb_featuremap_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_coefficient_hessian,params->get_int("nb_featuremap_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_derivatives_out,params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_gradients_out,params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_second_gradients_out,params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv1_pooling2_input_sampledown,params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float)));
+	d_pooling2_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling2_neurons * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_bias_weight = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_bias_weight_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_coefficient = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_coefficient_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
+	d_conv1_pooling2_input_sampledown = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	cutilSafeCallNoSync(cudaMemcpy(d_conv1_pooling2_bias_weight, h_conv1_pooling2_bias_weight, params->get_int("nb_featuremap_pooling2") * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMemcpy(d_conv1_pooling2_coefficient, h_conv1_pooling2_coefficient, params->get_int("nb_featuremap_pooling2") * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
   }
 
   // - convolutional layer C3 -
@@ -265,19 +264,19 @@ lenet5::lenet5(parameters* _params)
 	}
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_neurons, size_of_h_conv3_neurons * sizeof(float)));
-
 	//allocate device space for synapses and init the values
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_synapses_values,  size_of_h_pooling2_conv3_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_synapses_hessian,  size_of_h_pooling2_conv3_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMemcpy(d_pooling2_conv3_synapses_values, h_pooling2_conv3_synapses_values, size_of_h_pooling2_conv3_synapses * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_derivatives_out,params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_gradients_kernel,(params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel")) * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_gradients_bias,params->get_int("nb_featuremap_conv3") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_gradients_out,params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_second_gradients_out_sum,params->get_int("nb_featuremap_conv3") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_second_gradients_out,params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling2_conv3_fin_temp,(params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2")) * sizeof(float)));
+	d_conv3_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_conv3_neurons * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_synapses_values = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling2_conv3_synapses * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_synapses_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling2_conv3_synapses * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_gradients_kernel = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_gradients_bias = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_second_gradients_out_sum = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float), NULL, &opencl_err);
+	d_pooling2_conv3_fin_temp = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
+
+	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_TRUE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
   }  
 
   // - pooling layer P4 -
@@ -315,19 +314,19 @@ lenet5::lenet5(parameters* _params)
 		h_conv3_pooling4_coefficient[fo] = conv3_pooling4.at(fo)->coefficient; 
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_neurons, size_of_h_pooling4_neurons * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_bias_weight,params->get_int("nb_featuremap_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_bias_weight_hessian,params->get_int("nb_featuremap_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_coefficient,params->get_int("nb_featuremap_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_coefficient_hessian,params->get_int("nb_featuremap_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_derivatives_out,params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_gradients_out,params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_second_gradients_out,params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv3_pooling4_input_sampledown,params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float)));
+	d_pooling4_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling4_neurons * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_bias_weight = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_bias_weight_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_coefficient = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_coefficient_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
+	d_conv3_pooling4_input_sampledown = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	cutilSafeCallNoSync(cudaMemcpy(d_conv3_pooling4_bias_weight, h_conv3_pooling4_bias_weight, params->get_int("nb_featuremap_pooling4") * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMemcpy(d_conv3_pooling4_coefficient, h_conv3_pooling4_coefficient, params->get_int("nb_featuremap_pooling4") * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
   }
 
   // - convolutional layer C5 -
@@ -405,19 +404,20 @@ lenet5::lenet5(parameters* _params)
 	}
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_neurons, size_of_h_conv5_neurons * sizeof(float)));
-
 	//allocate device space for synapses and init the values
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_synapses_values,  size_of_h_pooling4_conv5_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_synapses_hessian,  size_of_h_pooling4_conv5_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMemcpy(d_pooling4_conv5_synapses_values, h_pooling4_conv5_synapses_values, size_of_h_pooling4_conv5_synapses * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_derivatives_out,params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_gradients_kernel,(params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel")) * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_gradients_bias,params->get_int("nb_featuremap_conv5") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_gradients_out,params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_second_gradients_out_sum,params->get_int("nb_featuremap_conv5") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_second_gradients_out,params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_pooling4_conv5_fin_temp,(params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4")) * sizeof(float)));
+	d_conv5_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_conv5_neurons * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_synapses_values = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling4_conv5_synapses * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_synapses_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_pooling4_conv5_synapses * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_gradients_kernel = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_gradients_bias = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_second_gradients_out_sum = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("size_y_conv5") * params->get_int("size_x_conv5") * sizeof(float), NULL, &opencl_err);
+	d_pooling4_conv5_fin_temp = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
+
+
+	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_TRUE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
   }  
 
   // - hidden layer H6 -
@@ -472,16 +472,16 @@ lenet5::lenet5(parameters* _params)
 	}
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_neurons, size_of_h_hidden6_neurons * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_hidden6_synapses_values,size_of_h_conv5_hidden6_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_hidden6_synapses_hessian,size_of_h_conv5_hidden6_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_hidden6_derivatives_out,params->get_int("nb_neuron_hidden6") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_hidden6_gradients_out,params->get_int("nb_neuron_hidden6") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_conv5_hidden6_second_gradients_out,params->get_int("nb_neuron_hidden6") * sizeof(float)));
+	d_hidden6_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_hidden6_neurons * sizeof(float), NULL, &opencl_err);
+	d_conv5_hidden6_synapses_values = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_conv5_hidden6_synapses * sizeof(float), NULL, &opencl_err);
+	d_conv5_hidden6_synapses_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_conv5_hidden6_synapses * sizeof(float), NULL, &opencl_err);
+	d_conv5_hidden6_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_hidden6") * sizeof(float), NULL, &opencl_err);
+	d_conv5_hidden6_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_hidden6") * sizeof(float), NULL, &opencl_err);
+	d_conv5_hidden6_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_hidden6") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	cutilSafeCallNoSync(cudaMemcpy(d_hidden6_neurons, h_hidden6_neurons, size_of_h_hidden6_neurons * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMemcpy(d_conv5_hidden6_synapses_values, h_conv5_hidden6_synapses_values, size_of_h_conv5_hidden6_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_neurons, CL_TRUE, 0, size_of_h_hidden6_neurons * sizeof(float), h_hidden6_neurons, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_TRUE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
   }
 
   // - output layer -
@@ -519,17 +519,15 @@ lenet5::lenet5(parameters* _params)
 	}
 
 	//allocate device memory
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_output_synapses_values,size_of_h_hidden6_output_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_output_synapses_hessian,size_of_h_hidden6_output_synapses * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_output_derivatives_out,params->get_int("nb_neuron_output") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_output_gradients_out,params->get_int("nb_neuron_output") * sizeof(float)));
-	cutilSafeCallNoSync(cudaMalloc((void **)&d_hidden6_output_second_gradients_out,params->get_int("nb_neuron_output") * sizeof(float)));
+	d_hidden6_output_synapses_values = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_hidden6_output_synapses * sizeof(float), NULL, &opencl_err);
+	d_hidden6_output_synapses_hessian = cl::Buffer(context, CL_MEM_READ_WRITE, size_of_h_hidden6_output_synapses * sizeof(float), NULL, &opencl_err);
+	d_hidden6_output_derivatives_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
+	d_hidden6_output_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
+	d_hidden6_output_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	cutilSafeCallNoSync(cudaMemcpy(d_hidden6_output_synapses_values, h_hidden6_output_synapses_values, size_of_h_hidden6_output_synapses * sizeof(float), cudaMemcpyHostToDevice));
-
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
   }
-#endif
   cout << "--- created all instants of cnn ---" << endl;
   cout << "--- leave enet5 constructor ---" << endl;
 
@@ -537,7 +535,6 @@ lenet5::lenet5(parameters* _params)
 	
 lenet5::~lenet5() 
 {  
-#if 0
   for (int i = 0; i < input_neurons.size(); i++)
     delete(input_neurons.at(i));
   for (int i = 0; i < conv1_neurons.size(); i++)
@@ -580,6 +577,7 @@ lenet5::~lenet5()
 
   if(use_gpu)
   {
+#if 0
 	// input-conv1
 	free(h_input_conv1_synapses_values);
 	free(h_input_conv1_synapses_hessian);
@@ -683,8 +681,8 @@ lenet5::~lenet5()
 	clReleaseCommandQueue(queue);
 	clReleaseContext(context);
 	delete(devices);
-  }  
 #endif
+  }  
 }
 
 void lenet5::initializeOpenCL()
@@ -764,7 +762,6 @@ void lenet5::initializeOpenCL()
 
 void lenet5::dump()
 {
-#if 0
   cout << "--- begin dump cnn ---" << endl;
   cout << "Begin dump input neurons:" << endl;
   for (int fo = 0; fo < params->get_int("nb_featuremap_input"); fo++)
@@ -838,13 +835,11 @@ void lenet5::dump()
   file.open("./cnn_test_load_dump/hidden6_output.dump");
   hidden6_output->dump(file);
   file.close();   
-#endif
 }
 
 // load weights from dump files
 void lenet5::load()
 {
-#if 0
   // - input-C1 -
   cout << "--- 1 load input-C1 subnets ---" << endl;  
   // There are 6 subnets in input-C1;
@@ -1007,7 +1002,7 @@ void lenet5::load()
 			h_input_conv1_synapses_values[(size_of_h_input_conv1_synapses - conv1_neurons.size()) + fo] = input_conv1.at(fo)->bias_weight; 
 	}
 
-	cutilSafeCallNoSync(cudaMemcpy(d_input_conv1_synapses_values, h_input_conv1_synapses_values, size_of_h_input_conv1_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
 
 	if(in_has_bias) {
   		for (int fo = 0; fo < pooling2_neurons.size(); fo++)
@@ -1017,8 +1012,8 @@ void lenet5::load()
   	for (int fo = 0; fo < pooling2_neurons.size(); fo++)
 		h_conv1_pooling2_coefficient[fo] = conv1_pooling2.at(fo)->coefficient; 
 
-	cutilSafeCallNoSync(cudaMemcpy(d_conv1_pooling2_bias_weight, h_conv1_pooling2_bias_weight, params->get_int("nb_featuremap_pooling2") * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMemcpy(d_conv1_pooling2_coefficient, h_conv1_pooling2_coefficient, params->get_int("nb_featuremap_pooling2") * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
 
 	int size_of_h_pooling2_conv3_synapses;
 	if(in_has_bias) 
@@ -1044,7 +1039,7 @@ void lenet5::load()
 		}
 	}
 
-	cutilSafeCallNoSync(cudaMemcpy(d_pooling2_conv3_synapses_values, h_pooling2_conv3_synapses_values, size_of_h_pooling2_conv3_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_TRUE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
 
 	if(in_has_bias) {
   		for (int fo = 0; fo < pooling4_neurons.size(); fo++)
@@ -1054,8 +1049,8 @@ void lenet5::load()
   	for (int fo = 0; fo < pooling4_neurons.size(); fo++)
 		h_conv3_pooling4_coefficient[fo] = conv3_pooling4.at(fo)->coefficient; 
 
-	cutilSafeCallNoSync(cudaMemcpy(d_conv3_pooling4_bias_weight, h_conv3_pooling4_bias_weight, params->get_int("nb_featuremap_pooling4") * sizeof(float), cudaMemcpyHostToDevice));
-	cutilSafeCallNoSync(cudaMemcpy(d_conv3_pooling4_coefficient, h_conv3_pooling4_coefficient, params->get_int("nb_featuremap_pooling4") * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
 
 	int size_of_h_pooling4_conv5_synapses;
 	if(in_has_bias) 
@@ -1081,7 +1076,7 @@ void lenet5::load()
 		}
 	}
 
-	cutilSafeCallNoSync(cudaMemcpy(d_pooling4_conv5_synapses_values, h_pooling4_conv5_synapses_values, size_of_h_pooling4_conv5_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_TRUE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
 
 	int size_of_h_conv5_hidden6_synapses; 
 	if(in_has_bias) 
@@ -1100,7 +1095,7 @@ void lenet5::load()
 		}
 	}
 
-	cutilSafeCallNoSync(cudaMemcpy(d_conv5_hidden6_synapses_values, h_conv5_hidden6_synapses_values, size_of_h_conv5_hidden6_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_TRUE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
 
 	int size_of_h_hidden6_output_synapses; 
 	if(in_has_bias) 
@@ -1119,14 +1114,12 @@ void lenet5::load()
 		}
 	}
 
-	cutilSafeCallNoSync(cudaMemcpy(d_hidden6_output_synapses_values, h_hidden6_output_synapses_values, size_of_h_hidden6_output_synapses * sizeof(float), cudaMemcpyHostToDevice));
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
   }
-#endif
 }
 
 void lenet5::forward(bool _backpropagation)
 {
-#if 0
   if (dbg) cout << "--- begin forward ---" << endl;
   if (dbg) cout << "---- input neurons ----" << endl;
   if (dbg) 
@@ -1265,14 +1258,12 @@ void lenet5::forward(bool _backpropagation)
 
   //if (dbg) output_neurons->dump();
   if (dbg) cout << "--- end forward ---" << endl;
-#endif
 }
 
 // train on a data set;
 float lenet5::train(int _nb_epochs, data_set_mnist* _train, bool _use_second_order) 
 {
   float error;
-#if 0
   float learning_rate_tmp = params->get_float("learning_rate");
 
   if(_use_second_order) hessian_estimation(_train);
@@ -1306,31 +1297,17 @@ float lenet5::train(int _nb_epochs, data_set_mnist* _train, bool _use_second_ord
 
   } // for epoch
   //cout << "error=" << error << endl;
-#endif
   return error;
 }
 
 // back-propagation;
 float lenet5::train_back_propagation(data_set_mnist* train, bool _use_second_order) 
 {
-#if 0
-  float fptime, bptime, time;
-  cudaEvent_t start,end, start1,end1, start2,end2;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-  cudaEventCreate(&start1);
-  cudaEventCreate(&end1);
-  cudaEventCreate(&start2);
-  cudaEventCreate(&end2);
-
-  fptime = bptime = 0.0;
-
   verbose = false;
   float mse = 0;
   float mis_count = 0;
   //cout << "#rows: " << train->get_size() << " //mlp::train_back_prop" << endl;
-  //for (int i = 0; i < train->get_size(); i++) 
-  for (int i = 0; i <10 ; i++) 
+  for (int i = 0; i < train->get_size(); i++) 
   {
     /*
     if(!((i+1)%10000))
@@ -1353,14 +1330,8 @@ float lenet5::train_back_propagation(data_set_mnist* train, bool _use_second_ord
     input_neurons.at(0)->set(row->inputs);
     // compute all the node outputs for this row;
     //
-cudaEventRecord(start2, 0);
 
     forward(true);
-
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    fptime += time;
 
     if(judgement() != row->label) mis_count++;
     // dump output and expected values;
@@ -1371,8 +1342,6 @@ cudaEventRecord(start2, 0);
     if (dbg) cout << "dbg mse: " << mse << endl;
 
     // - back-propagation -
-
-cudaEventRecord(start2, 0);
     if (dbg) cout << "--- hidden6_output ---" << endl;	
     // compute gradients in output layer;
     hidden6_output->compute_gradients_out(row->outputs);
@@ -1426,27 +1395,17 @@ cudaEventRecord(start2, 0);
     // update weights between input and conv1 layers;
     for (int fo = 0; fo < params->get_int("nb_featuremap_conv1"); fo++)
       input_conv1.at(fo)->update_weights(_use_second_order); 
-
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    bptime += time;
   } // for data entries
-
-  cout << "fptime = " << fptime/10.0 << endl;
-  cout << "bptime = " << bptime/10.0 << endl;
-
 
   // mean squared error
   // mse = mse;// / (float)(train->get_size());
   cout << "mis classification: " << mis_count << endl;
-#endif
+
   return mse;
 }
 
 float lenet5::test_mnist(data_set_mnist* _test)
 {
-#if 0
   float correct = 0;
   data_row_mnist* row;
 
@@ -1475,8 +1434,6 @@ float lenet5::test_mnist(data_set_mnist* _test)
   float err_rate = 1 - correct/(float)_test->get_size();
   cout << "the error rate is:" << err_rate << endl;
   cout<< "Test finish! seeya!" << endl;
-#endif
-  float err_rate = 1;
   return err_rate; 
 }
 
@@ -1484,7 +1441,6 @@ int lenet5::judgement()
 {
   float max = -10000;
   int label=0;
-#if 0
   int length = (output_neurons->has_bias)? output_neurons->size-1:output_neurons->size;
   for(int i=0; i<length; i++)
   {
@@ -1494,13 +1450,11 @@ int lenet5::judgement()
       label = i;
     }
   }
-#endif
   return label;
 }
 
 void lenet5::hessian_estimation(data_set_mnist* train)
 {
-#if 0
   cout << "commencing computing hessian information" << endl;
   clear_hessian_information();
   for(int i=0; i<nb_sampled_patterns; i++)
@@ -1565,12 +1519,10 @@ void lenet5::hessian_estimation(data_set_mnist* train)
     for (int fo = 0; fo < params->get_int("nb_featuremap_conv1"); fo++)
       input_conv1.at(fo)->update_hessian(nb_sampled_patterns); 
   }
-#endif
 }
 
 void lenet5::clear_hessian_information()
 {
-#if 0
    if (dbg) cout << "--- hidden6_output ---" << endl; 
     hidden6_output->clear_hessian_information();
 
@@ -1596,7 +1548,6 @@ void lenet5::clear_hessian_information()
     if (dbg) cout << "--- input_conv1 ---" << endl;
     for (int fo = 0; fo < params->get_int("nb_featuremap_conv1"); fo++)
       input_conv1.at(fo)->clear_hessian_information(); 
-#endif
 }
 
 
