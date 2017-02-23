@@ -577,20 +577,9 @@ lenet5::~lenet5()
 
   if(use_gpu)
   {
-#if 0
 	// input-conv1
 	free(h_input_conv1_synapses_values);
 	free(h_input_conv1_synapses_hessian);
-
-	clReleaseMemObject(d_conv1_neurons);
-	clReleaseMemObject(d_input_conv1_synapses_values);
-	clReleaseMemObject(d_input_conv1_synapses_hessian);
-	clReleaseMemObject(d_input_conv1_derivatives_out);
-	clReleaseMemObject(d_input_conv1_gradients_kernel);
-	clReleaseMemObject(d_input_conv1_gradients_bias);
-	clReleaseMemObject(d_input_conv1_gradients_out);
-	clReleaseMemObject(d_input_conv1_second_gradients_out_sum);
-	clReleaseMemObject(d_input_conv1_second_gradients_out);
 
 	// conv1-pooling2
 	free(h_conv1_pooling2_bias_weight);
@@ -598,30 +587,9 @@ lenet5::~lenet5()
 	free(h_conv1_pooling2_coefficient);
 	free(h_conv1_pooling2_coefficient_hessian);
 
-	clReleaseMemObject(d_pooling2_neurons);
-	clReleaseMemObject(d_conv1_pooling2_bias_weight);
-	clReleaseMemObject(d_conv1_pooling2_bias_weight_hessian);
-	clReleaseMemObject(d_conv1_pooling2_coefficient);
-	clReleaseMemObject(d_conv1_pooling2_coefficient_hessian);
-	clReleaseMemObject(d_conv1_pooling2_derivatives_out);
-	clReleaseMemObject(d_conv1_pooling2_gradients_out);
-	clReleaseMemObject(d_conv1_pooling2_second_gradients_out);
-	clReleaseMemObject(d_conv1_pooling2_input_sampledown);
-	
 	// pooling2-conv3
 	free(h_pooling2_conv3_synapses_values);
 	free(h_pooling2_conv3_synapses_hessian);
-
-	clReleaseMemObject(d_conv3_neurons);
-	clReleaseMemObject(d_pooling2_conv3_synapses_values);
-	clReleaseMemObject(d_pooling2_conv3_synapses_hessian);
-	clReleaseMemObject(d_pooling2_conv3_derivatives_out);
-	clReleaseMemObject(d_pooling2_conv3_gradients_kernel);
-	clReleaseMemObject(d_pooling2_conv3_gradients_bias);
-	clReleaseMemObject(d_pooling2_conv3_gradients_out);
-	clReleaseMemObject(d_pooling2_conv3_second_gradients_out_sum);
-	clReleaseMemObject(d_pooling2_conv3_second_gradients_out);
-	clReleaseMemObject(d_pooling2_conv3_fin_temp);
 
 	// conv3-pooling4
 	free(h_conv3_pooling4_bias_weight);
@@ -629,58 +597,90 @@ lenet5::~lenet5()
 	free(h_conv3_pooling4_coefficient);
 	free(h_conv3_pooling4_coefficient_hessian);
 
-	clReleaseMemObject(d_pooling4_neurons);
-	clReleaseMemObject(d_conv3_pooling4_bias_weight);
-	clReleaseMemObject(d_conv3_pooling4_bias_weight_hessian);
-	clReleaseMemObject(d_conv3_pooling4_coefficient);
-	clReleaseMemObject(d_conv3_pooling4_coefficient_hessian);
-	clReleaseMemObject(d_conv3_pooling4_derivatives_out);
-	clReleaseMemObject(d_conv3_pooling4_gradients_out);
-	clReleaseMemObject(d_conv3_pooling4_second_gradients_out);
-	clReleaseMemObject(d_conv3_pooling4_input_sampledown);
-
 	// pooling4-conv5
 	free(h_pooling4_conv5_synapses_values);
 	free(h_pooling4_conv5_synapses_hessian);
-
-	clReleaseMemObject(d_conv5_neurons);
-	clReleaseMemObject(d_pooling4_conv5_synapses_values);
-	clReleaseMemObject(d_pooling4_conv5_synapses_hessian);
-	clReleaseMemObject(d_pooling4_conv5_derivatives_out);
-	clReleaseMemObject(d_pooling4_conv5_gradients_kernel);
-	clReleaseMemObject(d_pooling4_conv5_gradients_bias);
-	clReleaseMemObject(d_pooling4_conv5_gradients_out);
-	clReleaseMemObject(d_pooling4_conv5_second_gradients_out_sum);
-	clReleaseMemObject(d_pooling4_conv5_second_gradients_out);
-	clReleaseMemObject(d_pooling4_conv5_fin_temp);
 
 	// conv5-hidden6
 	free(h_hidden6_neurons);
 	free(h_conv5_hidden6_synapses_values);
 	free(h_conv5_hidden6_synapses_hessian);
 
-	clReleaseMemObject(d_hidden6_neurons);
-	clReleaseMemObject(d_conv5_hidden6_synapses_values);
-	clReleaseMemObject(d_conv5_hidden6_synapses_hessian);
-	clReleaseMemObject(d_conv5_hidden6_derivatives_out);
-	clReleaseMemObject(d_conv5_hidden6_gradients_out);
-	clReleaseMemObject(d_conv5_hidden6_second_gradients_out);
-
 	// hidden6-output
 	free(h_hidden6_output_synapses_values);
 	free(h_hidden6_output_synapses_hessian);
 
-	clReleaseMemObject(d_hidden6_output_synapses_values);
-	clReleaseMemObject(d_hidden6_output_synapses_hessian);
-	clReleaseMemObject(d_hidden6_output_derivatives_out);
-	clReleaseMemObject(d_hidden6_output_gradients_out);
-	clReleaseMemObject(d_hidden6_output_second_gradients_out);
+	// Release gpu memory objects
+	if(d_conv1_neurons()) clReleaseMemObject(d_conv1_neurons());
+#if 0
+	clReleaseMemObject(d_input_conv1_synapses_values());
+	clReleaseMemObject(d_input_conv1_synapses_hessian());
+	clReleaseMemObject(d_input_conv1_derivatives_out());
+	clReleaseMemObject(d_input_conv1_gradients_kernel());
+	clReleaseMemObject(d_input_conv1_gradients_bias());
+	clReleaseMemObject(d_input_conv1_gradients_out());
+	clReleaseMemObject(d_input_conv1_second_gradients_out_sum());
+	clReleaseMemObject(d_input_conv1_second_gradients_out());
+
+	clReleaseMemObject(d_pooling2_neurons());
+	clReleaseMemObject(d_conv1_pooling2_bias_weight());
+	clReleaseMemObject(d_conv1_pooling2_bias_weight_hessian());
+	clReleaseMemObject(d_conv1_pooling2_coefficient());
+	clReleaseMemObject(d_conv1_pooling2_coefficient_hessian());
+	clReleaseMemObject(d_conv1_pooling2_derivatives_out());
+	clReleaseMemObject(d_conv1_pooling2_gradients_out());
+	clReleaseMemObject(d_conv1_pooling2_second_gradients_out());
+	clReleaseMemObject(d_conv1_pooling2_input_sampledown());
+	
+	clReleaseMemObject(d_conv3_neurons());
+	clReleaseMemObject(d_pooling2_conv3_synapses_values());
+	clReleaseMemObject(d_pooling2_conv3_synapses_hessian());
+	clReleaseMemObject(d_pooling2_conv3_derivatives_out());
+	clReleaseMemObject(d_pooling2_conv3_gradients_kernel());
+	clReleaseMemObject(d_pooling2_conv3_gradients_bias());
+	clReleaseMemObject(d_pooling2_conv3_gradients_out());
+	clReleaseMemObject(d_pooling2_conv3_second_gradients_out_sum());
+	clReleaseMemObject(d_pooling2_conv3_second_gradients_out());
+	clReleaseMemObject(d_pooling2_conv3_fin_temp());
+
+	clReleaseMemObject(d_pooling4_neurons());
+	clReleaseMemObject(d_conv3_pooling4_bias_weight());
+	clReleaseMemObject(d_conv3_pooling4_bias_weight_hessian());
+	clReleaseMemObject(d_conv3_pooling4_coefficient());
+	clReleaseMemObject(d_conv3_pooling4_coefficient_hessian());
+	clReleaseMemObject(d_conv3_pooling4_derivatives_out());
+	clReleaseMemObject(d_conv3_pooling4_gradients_out());
+	clReleaseMemObject(d_conv3_pooling4_second_gradients_out());
+	clReleaseMemObject(d_conv3_pooling4_input_sampledown());
+
+	clReleaseMemObject(d_conv5_neurons());
+	clReleaseMemObject(d_pooling4_conv5_synapses_values());
+	clReleaseMemObject(d_pooling4_conv5_synapses_hessian());
+	clReleaseMemObject(d_pooling4_conv5_derivatives_out());
+	clReleaseMemObject(d_pooling4_conv5_gradients_kernel());
+	clReleaseMemObject(d_pooling4_conv5_gradients_bias());
+	clReleaseMemObject(d_pooling4_conv5_gradients_out());
+	clReleaseMemObject(d_pooling4_conv5_second_gradients_out_sum());
+	clReleaseMemObject(d_pooling4_conv5_second_gradients_out());
+	clReleaseMemObject(d_pooling4_conv5_fin_temp());
+
+	clReleaseMemObject(d_hidden6_neurons());
+	clReleaseMemObject(d_conv5_hidden6_synapses_values());
+	clReleaseMemObject(d_conv5_hidden6_synapses_hessian());
+	clReleaseMemObject(d_conv5_hidden6_derivatives_out());
+	clReleaseMemObject(d_conv5_hidden6_gradients_out());
+	clReleaseMemObject(d_conv5_hidden6_second_gradients_out());
+
+	clReleaseMemObject(d_hidden6_output_synapses_values());
+	clReleaseMemObject(d_hidden6_output_synapses_hessian());
+	clReleaseMemObject(d_hidden6_output_derivatives_out());
+	clReleaseMemObject(d_hidden6_output_gradients_out());
+	clReleaseMemObject(d_hidden6_output_second_gradients_out());
 
 	// Release OpenCL variables
-	clReleaseProgram(program);
-	clReleaseCommandQueue(queue);
-	clReleaseContext(context);
-	delete(devices);
+	clReleaseProgram(program());
+	clReleaseCommandQueue(queue());
+	clReleaseContext(context());
 #endif
   }  
 }
