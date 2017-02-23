@@ -31,16 +31,6 @@ extern bool dbg;
 void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 {
 #if 0
-#if GPU_COUNT_TIME
-  float time;
-  cudaEvent_t start,end;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_conv_subnet3D_forward_prop_kernel(
 		d_all_input_neurons, 
@@ -64,16 +54,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_input_conv1_second_gradients_out
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_conv_forward_prop_kernel_input_conv1 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_pooling_subnet2D_forward_prop_kernel(
 		d_pooling2_neurons, 
@@ -96,16 +76,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv1_pooling2_input_sampledown
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_pooling_forward_prop_kernel_conv1_pooling2 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_conv_subnet3D_forward_prop_kernel(
 		d_pooling2_neurons, 
@@ -129,17 +99,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_pooling2_conv3_second_gradients_out
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_conv_forward_prop_kernel_pooling2_conv3 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
-
   call_pooling_subnet2D_forward_prop_kernel(
 		d_pooling4_neurons, 
 		params->get_int("nb_featuremap_pooling4"), 
@@ -161,16 +120,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv3_pooling4_input_sampledown
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_pooling_forward_prop_kernel_conv3_pooling4 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_conv_subnet3D_forward_prop_kernel_p4c5(
 		d_pooling4_neurons, 
@@ -194,16 +143,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_pooling4_conv5_second_gradients_out
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_conv_forward_prop_kernel_pooling4_conv5 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_mcp_forward_prop_kernel(
 		d_hidden6_neurons, 
@@ -217,16 +156,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv5_hidden6_derivatives_out
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_mcp_kernel_conv5_hidden6 "  << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start, 0);
-#endif
 
   call_mcp_forward_prop_kernel(
 		d_all_output_neurons, 
@@ -240,12 +169,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_hidden6_output_derivatives_out
 		);
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT call_mcp_kernel_hidden6_output "  << time << endl;
-#endif
 #endif
 }
 
@@ -253,7 +176,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 // train on a data set;
 float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second_order) 
 {
-#if 0
   float error;
   float learning_rate_tmp = params->get_float("learning_rate");
 
@@ -290,35 +212,15 @@ float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second
   } // for epoch
   //cout << "error=" << error << endl;
   return error;
-#endif
 }
 
 // back-propagation;
 float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second_order) 
 {
 #if 0
-//#if GPU_COUNT_TIME
-  float fptime, bptime, time;
-  cudaEvent_t start,end, start1,end1, start2,end2;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-  cudaEventCreate(&start1);
-  cudaEventCreate(&end1);
-  cudaEventCreate(&start2);
-  cudaEventCreate(&end2);
-
-  fptime = bptime = 0;
-
-  cudaEventRecord(start, 0);
-//#endif
-
   verbose = false;
   //float mse = 0;
   float mis_count = 0;
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start1, 0);
-#endif
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
   h_all_input_neurons = (float*)malloc(sizeof(float) * train->get_size() * input_neuron_size); 
@@ -347,39 +249,14 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
   cutilSafeCallNoSync(cudaMalloc((void **)&d_all_row_outputs, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float)));
   cutilSafeCallNoSync(cudaMemcpyAsync(d_all_row_outputs, h_all_row_outputs, (train->get_size() * params->get_int("nb_neuron_output") * sizeof(float)), cudaMemcpyHostToDevice));
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end1, 0);
-  cudaEventSynchronize(end1);
-  cudaEventElapsedTime(&time, start1, end1);
-  cout << "T_STAT back_propagation_input_data_cy "  << time << endl;
-#endif
-
   for (int i = 0; i < train->get_size(); i++) 
   //for (int i = 0; i < 10; i++) 
   {
-#if GPU_COUNT_TIME
-    cudaEventRecord(start1, 0);
-#endif
     // compute all the node outputs for this row;
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     forward_gpu(true, i);
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    fptime += time;
-    //cout << "T_STAT forward_bp " << i << " " << time << endl;
-#endif
-
     // - back-propagation -
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_mcp_compute_gradients_out_kernel(
 						d_all_output_neurons, 
 						d_all_row_outputs,
@@ -388,16 +265,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						params->get_int("nb_neuron_output"),
 						d_hidden6_output_gradients_out						
 					  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_gradients_out_h6o_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_mcp_compute_gradients_in_kernel(
 						params->get_int("nb_neuron_hidden6"),		// nin
 						params->get_int("nb_neuron_output"),		// nout
@@ -406,16 +274,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv5_hidden6_derivatives_out,   // h_hidden6_output_derivatives_in
 						d_conv5_hidden6_gradients_out	   // h_hidden6_output_gradients_in,
 					);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_gradients_in_h6o_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_mcp_update_weights_kernel(
 						_use_second_order,
 						params->get_float("mu"),
@@ -428,16 +287,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_hidden6_output_synapses_hessian,
 						d_hidden6_output_synapses_values	
 				  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_update_weight_h6o_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_mcp_compute_gradients_in_kernel(
 						params->get_int("nb_featuremap_conv5"),		// nin
 						params->get_int("nb_neuron_hidden6"),		// nout
@@ -446,16 +296,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling4_conv5_derivatives_out,   // h_conv5_hidden6_derivatives_in
 						d_pooling4_conv5_gradients_out	   // h_conv5_hidden6_gradients_in,
 					);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_gradients_in_c5h6_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_mcp_update_weights_kernel(
 						_use_second_order,
 						params->get_float("mu"),
@@ -468,16 +309,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv5_hidden6_synapses_hessian,
 						d_conv5_hidden6_synapses_values	
 				  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_update_weight_c5h6_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_conv_subnet3D_compute_gradients_in_new_kernel(
 						params->get_int("nb_featuremap_pooling4"),
 						params->get_int("size_y_pooling4"),
@@ -495,16 +327,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv3_pooling4_gradients_out,		// gradients_in
 						d_pooling4_conv5_fin_temp		// d_fin_temp
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_gradients_in_p4c5_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_conv_subnet3D_update_weights_kernel(
 						_use_second_order,
 						params->get_float("mu"),
@@ -528,12 +351,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling4_conv5_synapses_hessian,
 						d_pooling4_conv5_synapses_values
 				  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_update_weight_p4c5_p " << i << " " << time << endl;
-#endif
 
     if (conv3_pooling4.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
@@ -567,9 +384,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     }
     else if (conv3_pooling4.at(0)->op == "M") {
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_pooling_subnet2D_compute_gradients_in_kernel_M(
 						params->get_int("nb_featuremap_pooling4"),
 						params->get_int("size_y_pooling4"),
@@ -582,19 +396,10 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling2_conv3_gradients_out		// gradients_in
 						);
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT pool_compute_gradients_in_c3p4_p " << i << " " << time << endl;
-#endif
     }
     else
  	tools::error("Wrong operation for pooling layer");
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_conv_subnet3D_compute_gradients_in_new_kernel(
 						params->get_int("nb_featuremap_pooling2"),
 						params->get_int("size_y_pooling2"),
@@ -612,16 +417,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv1_pooling2_gradients_out,		// gradients_in
 						d_pooling2_conv3_fin_temp		// d_fin_temp
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_gradients_in_p2c3_p " << i << " " << time << endl;
-#endif
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_conv_subnet3D_update_weights_kernel(
 						_use_second_order,
 						params->get_float("mu"),
@@ -645,12 +441,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling2_conv3_synapses_hessian,
 						d_pooling2_conv3_synapses_values
 				  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_update_weight_p2c3_p " << i << " " << time << endl;
-#endif
 
     if (conv1_pooling2.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
@@ -684,9 +474,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     }
     else if (conv1_pooling2.at(0)->op == "M") {
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_pooling_subnet2D_compute_gradients_in_kernel_M(
 						params->get_int("nb_featuremap_pooling2"),
 						params->get_int("size_y_pooling2"),
@@ -699,19 +486,10 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_input_conv1_gradients_out		// gradients_in
 						);
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT pool_compute_gradients_in_c1p2_p " << i << " " << time << endl;
-#endif
     }
     else
  	tools::error("Wrong operation for pooling layer");
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
     call_conv_subnet3D_update_weights_kernel_ic1(
 						_use_second_order,
 						params->get_float("mu"),
@@ -735,52 +513,22 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_input_conv1_synapses_hessian,
 						d_input_conv1_synapses_values
 				  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    bptime += time;
-    //cout << "T_STAT conv_compute_update_weight_ic1_p " << i << " " << time << endl;
-
-
-    cudaEventRecord(end1, 0);
-    cudaEventSynchronize(end1);
-    cudaEventElapsedTime(&time, start1, end1);
-    cout << "T_STAT train_back_it " << i << " " << time << endl;
-#endif
 
   } // for data entries
   mis_count = judgement_gpu(train);
   cout << "mis classification: " << mis_count << endl;
-
-  //cout << "fptime = " << fptime/10.0 << endl;
-  //cout << "bptime = " << bptime/10.0 << endl;
 
   free(h_all_input_neurons);
   free(h_all_output_neurons);
   cutilSafeCallNoSync(cudaFree(d_all_input_neurons));
   cutilSafeCallNoSync(cudaFree(d_all_output_neurons));
   cutilSafeCallNoSync(cudaFree(d_all_row_outputs));
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT train_back_p " << time << endl;
-#endif
 #endif
   return mse;
 }
 
 float lenet5::test_mnist_gpu(data_set_mnist* _test)
 {
-#if 0
-#if GPU_COUNT_TIME
-  float time;
-  cudaEvent_t start,end;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-#endif
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
   h_all_input_neurons = (float*)malloc(sizeof(float) * _test->get_size() * input_neuron_size); 
@@ -797,6 +545,7 @@ float lenet5::test_mnist_gpu(data_set_mnist* _test)
     }
 
   }
+#if 0
   cutilSafeCallNoSync(cudaMalloc((void **)&d_all_input_neurons, _test->get_size() * input_neuron_size * sizeof(float)));
   cutilSafeCallNoSync(cudaMalloc((void **)&d_all_output_neurons, _test->get_size() * params->get_int("nb_neuron_output") * sizeof(float)));
   //copy data from host to device
@@ -804,18 +553,7 @@ float lenet5::test_mnist_gpu(data_set_mnist* _test)
 
   for(int i=0; i< _test->get_size(); i++)
   {
-#if GPU_COUNT_TIME
-    cudaEventRecord(start, 0);
-#endif
-
     forward_gpu(false, i);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    cudaEventElapsedTime(&time, start, end);
-    cout << "T_STAT forward_p " << i << " " << time << endl;
-#endif
   }
 
   int mis_count = judgement_gpu(_test);
@@ -837,25 +575,8 @@ float lenet5::test_mnist_gpu(data_set_mnist* _test)
 void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 {
 #if 0
-#if GPU_COUNT_TIME
-  float time;
-  cudaEvent_t start,end, start1,end1, start2,end2;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
-  cudaEventCreate(&start1);
-  cudaEventCreate(&end1);
-  cudaEventCreate(&start2);
-  cudaEventCreate(&end2);
-
-  cudaEventRecord(start, 0);
-#endif
-
   cout << "commencing computing hessian information" << endl;
   clear_hessian_information_gpu();
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(start1, 0);
-#endif
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
   h_all_input_neurons = (float*)malloc(sizeof(float) * nb_sampled_patterns * input_neuron_size); 
@@ -877,51 +598,15 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
   //copy data from host to device
   cutilSafeCallNoSync(cudaMemcpyAsync(d_all_input_neurons, h_all_input_neurons, nb_sampled_patterns * input_neuron_size * sizeof(float), cudaMemcpyHostToDevice));
 
-#if GPU_COUNT_TIME
-  cudaEventRecord(end1, 0);
-  cudaEventSynchronize(end1);
-  cudaEventElapsedTime(&time, start1, end1);
-  cout << "T_STAT hessian_estimation_input_data_cy "  << time << endl;
-#endif
-
   for(int i=0; i<nb_sampled_patterns; i++)
   {
-#if GPU_COUNT_TIME
-    cudaEventRecord(start1, 0);
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
-
     forward_gpu(true, i);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT forward_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_mcp_compute_second_gradients_out_kernel(
 						d_hidden6_output_derivatives_out,
 						params->get_int("nb_neuron_output"),
 						d_hidden6_output_second_gradients_out						
 					  );
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_second_gradients_out_h6o_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_mcp_compute_second_gradients_in_kernel(
 						params->get_int("nb_neuron_hidden6"),		// nin
@@ -931,17 +616,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_conv5_hidden6_derivatives_out,   // h_hidden6_output_derivatives_in
 						d_conv5_hidden6_second_gradients_out	   // h_hidden6_output_second_gradients_in,
 					);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_second_gradients_in_h6o_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_mcp_compute_update_hessian_kernel(
 						nb_sampled_patterns,
@@ -953,17 +627,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_hidden6_output_synapses_hessian
 					);
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_update_hessian_h6o_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
-
     call_mcp_compute_second_gradients_in_kernel(
 						params->get_int("nb_featuremap_conv5"),		// nin
 						params->get_int("nb_neuron_hidden6"),		// nout
@@ -972,17 +635,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_pooling4_conv5_derivatives_out,   // h_conv5_hidden6_derivatives_in
 						d_pooling4_conv5_second_gradients_out	   // h_conv5_hidden6_second_gradients_in,
 					);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_second_gradients_in_c5h6_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_mcp_compute_update_hessian_kernel(
 						nb_sampled_patterns,
@@ -993,17 +645,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_conv5_neurons,				// nin
 						d_conv5_hidden6_synapses_hessian
 					);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT mcp_compute_update_hessian_c5h6_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_conv_subnet3D_compute_second_gradients_in_kernel(
 						params->get_int("nb_featuremap_pooling4"),
@@ -1022,16 +663,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_conv3_pooling4_second_gradients_out,		// gradients_in
 						d_pooling4_conv5_fin_temp		// d_fin_temp
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_second_gradients_in_p4c5_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_conv_subnet3D_update_hessian_kernel(
 						nb_sampled_patterns,
@@ -1052,12 +683,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						0,
 						d_pooling4_conv5_synapses_hessian
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_update_hessian_p4c5_p " << i << " " << time << endl;
-#endif
 
     if (conv3_pooling4.at(0)->op == "A") {
     call_pooling_subnet2D_compute_second_gradients_in_kernel_A(
@@ -1088,10 +713,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
     }
     else if (conv3_pooling4.at(0)->op == "M") {
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
-
     call_pooling_subnet2D_compute_second_gradients_in_kernel_M(
 						params->get_int("nb_featuremap_pooling4"),
 						params->get_int("size_y_pooling4"),
@@ -1103,20 +724,10 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_pooling2_conv3_derivatives_out,		// derivatives_in
 						d_pooling2_conv3_second_gradients_out		// gradients_in
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT pool_compute_second_gradients_in_c3p4_p " << i << " " << time << endl;
-#endif
 
     }
     else
  	tools::error("Wrong operation for pooling layer");
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_conv_subnet3D_compute_second_gradients_in_kernel(
 						params->get_int("nb_featuremap_pooling2"),
@@ -1135,16 +746,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_conv1_pooling2_second_gradients_out,		// gradients_in
 						d_pooling2_conv3_fin_temp		// d_fin_temp
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_second_gradients_in_p2c3_p " << i << " " << time << endl;
-#endif
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_conv_subnet3D_update_hessian_kernel(
 						nb_sampled_patterns,
@@ -1165,12 +766,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						0,
 						d_pooling2_conv3_synapses_hessian
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_update_hessian_p2c3_p " << i << " " << time << endl;
-#endif
 
     if (conv1_pooling2.at(0)->op == "A") {
     call_pooling_subnet2D_compute_second_gradients_in_kernel_A(
@@ -1201,10 +796,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
     }
     else if (conv1_pooling2.at(0)->op == "M") {
 
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
-
     call_pooling_subnet2D_compute_second_gradients_in_kernel_M(
 						params->get_int("nb_featuremap_pooling2"),
 						params->get_int("size_y_pooling2"),
@@ -1216,20 +807,9 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_input_conv1_derivatives_out,		// derivatives_in
 						d_input_conv1_second_gradients_out		// gradients_in
 						);
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT pool_compute_second_gradients_in_c1p2_p " << i << " " << time << endl;
-#endif
     }
     else
  	tools::error("Wrong operation for pooling layer");
-
-#if GPU_COUNT_TIME
-    cudaEventRecord(start2, 0);
-#endif
 
     call_conv_subnet3D_update_hessian_kernel(
 						nb_sampled_patterns,
@@ -1250,44 +830,16 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						i,
 						d_input_conv1_synapses_hessian
 						);
-#if GPU_COUNT_TIME
-    cudaEventRecord(end2, 0);
-    cudaEventSynchronize(end2);
-    cudaEventElapsedTime(&time, start2, end2);
-    cout << "T_STAT conv_compute_update_hessian_ic1_p " << i << " " << time << endl;
-
-
-    cudaEventRecord(end1, 0);
-    cudaEventSynchronize(end1);
-    cudaEventElapsedTime(&time, start1, end1);
-    cout << "T_STAT hessian_estimation_it " << i << " " << time << endl;
-#endif
   }
 
   free(h_all_input_neurons);
   cutilSafeCallNoSync(cudaFree(d_all_input_neurons));
   cutilSafeCallNoSync(cudaFree(d_all_output_neurons));
-
-#if GPU_COUNT_TIME
-  cudaEventRecord(end, 0);
-  cudaEventSynchronize(end);
-  cudaEventElapsedTime(&time, start, end);
-  cout << "T_STAT hessian_estimation " << time << endl;
-#endif
 #endif
 }
 
 void lenet5::clear_hessian_information_gpu()
 {
-#if 0
-#if GPU_COUNT_TIME
-        float time;
-  	cudaEvent_t start,end;
-  	cudaEventCreate(&start);
-  	cudaEventCreate(&end);
-  	cudaEventRecord(start, 0);
-#endif
-
 	int nb_neuron_output = params->get_int("nb_neuron_output");
 	int nb_neuron_hidden6 = params->get_int("nb_neuron_hidden6");
 	int nb_featuremap_conv5 = params->get_int("nb_featuremap_conv5");
@@ -1299,6 +851,7 @@ void lenet5::clear_hessian_information_gpu()
 	int size_y_conv_kernel = params->get_int("size_y_conv_kernel");
 	int size_x_conv_kernel = params->get_int("size_x_conv_kernel");
 
+#if 0
  	call_clear_3d_hessian(d_hidden6_output_synapses_hessian, nb_neuron_hidden6, 1, 1, 0, nb_neuron_output, 1, 1);
 
  	call_clear_3d_hessian(d_conv5_hidden6_synapses_hessian, nb_featuremap_conv5, 1, 1, 0, nb_neuron_hidden6, 1, 1);
@@ -1321,12 +874,6 @@ void lenet5::clear_hessian_information_gpu()
 
  	call_clear_3d_hessian(d_input_conv1_synapses_hessian, nb_featuremap_input, size_x_conv_kernel, size_y_conv_kernel, in_has_bias, nb_featuremap_conv1, 1, 1);
 
-#if GPU_COUNT_TIME
-  	cudaEventRecord(end, 0);
-  	cudaEventSynchronize(end);
-  	cudaEventElapsedTime(&time, start, end);
-  	cout << "T_STAT clear_hessian_p " << time << endl;
-#endif
 #endif
 }
 
