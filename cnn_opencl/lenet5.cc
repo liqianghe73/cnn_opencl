@@ -137,6 +137,7 @@ lenet5::lenet5(parameters* _params)
 	d_input_conv1_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv1") * params->get_int("size_y_conv1") * params->get_int("size_x_conv1") * sizeof(float), NULL, &opencl_err);
 
 	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
+	queue.finish();
   }  
 
   // - pooling layer P2 -
@@ -187,6 +188,7 @@ lenet5::lenet5(parameters* _params)
 	// copy data to gpu
 	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
 	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
+	queue.finish();
   }
 
   // - convolutional layer C3 -
@@ -277,6 +279,7 @@ lenet5::lenet5(parameters* _params)
 	d_pooling2_conv3_fin_temp = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
 
 	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_TRUE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
+	queue.finish();
   }  
 
   // - pooling layer P4 -
@@ -327,6 +330,7 @@ lenet5::lenet5(parameters* _params)
 	// copy data to gpu
 	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
 	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
+	queue.finish();
   }
 
   // - convolutional layer C5 -
@@ -418,6 +422,7 @@ lenet5::lenet5(parameters* _params)
 
 
 	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_TRUE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
+	queue.finish();
   }  
 
   // - hidden layer H6 -
@@ -482,6 +487,7 @@ lenet5::lenet5(parameters* _params)
 	// copy data to gpu
 	opencl_err = queue.enqueueWriteBuffer(d_hidden6_neurons, CL_TRUE, 0, size_of_h_hidden6_neurons * sizeof(float), h_hidden6_neurons, NULL, &event);
 	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_TRUE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
+	queue.finish();
   }
 
   // - output layer -
@@ -527,6 +533,7 @@ lenet5::lenet5(parameters* _params)
 
 	// copy data to gpu
 	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
+	queue.finish();
   }
   cout << "--- created all instants of cnn ---" << endl;
   cout << "--- leave enet5 constructor ---" << endl;
@@ -1115,6 +1122,9 @@ void lenet5::load()
 	}
 
 	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
+
+
+	queue.finish();
   }
 }
 
