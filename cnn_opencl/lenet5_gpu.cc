@@ -229,11 +229,11 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
 
-  h_all_input_neurons = new float[train->get_size() * input_neuron_size];
+  //std::vector<float>	h_all_input_neurons(train->get_size() * input_neuron_size);
 
-  //h_all_input_neurons = (float*)malloc(sizeof(float) * train->get_size() * input_neuron_size); 
-  h_all_row_outputs = (float*)malloc(sizeof(float) * train->get_size() * params->get_int("nb_neuron_output") ); 
-  h_all_output_neurons = (float*)malloc(sizeof(float) * train->get_size() * params->get_int("nb_neuron_output")* sizeof(float) ); 
+  h_all_input_neurons = new float[train->get_size() * input_neuron_size];
+  h_all_row_outputs = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
+  h_all_output_neurons = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
 
   for(int i=0; i< train->get_size(); i++)
   {
@@ -251,18 +251,18 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     }
   }
 
-cout << "here2\n";
-  d_all_input_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * input_neuron_size * sizeof(float), NULL, &opencl_err);
-
-  //d_all_output_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
-  //d_all_row_outputs = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
-
   //copy data from host to device
+  d_all_input_neurons = cl::Buffer(context, CL_MEM_READ_ONLY, train->get_size() * input_neuron_size * sizeof(float), NULL, &opencl_err);
+  d_all_output_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
+  d_all_row_outputs = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
+
   opencl_err = queue.enqueueWriteBuffer(d_all_input_neurons, CL_TRUE, 0, train->get_size() * input_neuron_size * sizeof(float), h_all_input_neurons, NULL, &event);
-  //opencl_err = queue.enqueueWriteBuffer(d_all_input_neurons, CL_TRUE, 0, train->get_size() * input_neuron_size * sizeof(float), h_all_input_neurons, NULL, &event);
+  opencl_err = queue.enqueueWriteBuffer(d_all_row_outputs, CL_TRUE, 0, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), h_all_row_outputs, NULL, &event);
+
+  //cout << "error rst:" << tools::oclErrorString(opencl_err) << endl;
   queue.finish();
+
 cout << "here\n";
-  //opencl_err = queue.enqueueWriteBuffer(d_all_row_outputs, CL_TRUE, 0, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), h_all_row_outputs, NULL, &event);
 
 #if 0
   for (int i = 0; i < train->get_size(); i++) 
@@ -536,13 +536,11 @@ cout << "here\n";
   mis_count = judgement_gpu(train);
   cout << "mis classification: " << mis_count << endl;
 
+*/
   free(h_all_input_neurons);
   free(h_all_output_neurons);
+  free(h_all_row_outputs);
 
-  if(d_all_input_neurons()) clReleaseMemObject(d_all_input_neurons());
-  if(d_all_output_neurons()) clReleaseMemObject(d_all_output_neurons());
-  if(d_all_row_outputs()) clReleaseMemObject(d_all_row_outputs());
-*/
   return mse;
 }
 
@@ -585,9 +583,6 @@ float lenet5::test_mnist_gpu(data_set_mnist* _test)
 
   free(h_all_input_neurons);
   free(h_all_output_neurons);
-
-  if(d_all_input_neurons()) clReleaseMemObject(d_all_input_neurons());
-  if(d_all_output_neurons()) clReleaseMemObject(d_all_output_neurons());
 
   return err_rate; 
 }
@@ -857,9 +852,6 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
   }
 
   free(h_all_input_neurons);
-
-  if(d_all_input_neurons()) clReleaseMemObject(d_all_input_neurons());
-  if(d_all_output_neurons()) clReleaseMemObject(d_all_output_neurons());
 }
 
 void lenet5::clear_hessian_information_gpu()

@@ -11,8 +11,15 @@
 #ifndef _lenet5_hh_
 #define _lenet5_hh_
 
-#define __CL_ENABLE_EXCEPTIONS 
+#define __CL_ENABLE_EXCEPTIONS
+#if defined(__APPLE__) || defined(__MACOSX)
+#include <OpenCL/cl.hpp>
+#else
 #include <CL/cl.hpp>
+#endif
+
+#include <cstdio>
+#include <cstdlib>
 
 #include <string>
 #include <map>
@@ -23,6 +30,7 @@
 
 #define dump_dir "./cnn_test_load_dump/"
 #define LR_threshold 0.00002
+
 
 using namespace std;
 
@@ -116,6 +124,8 @@ public:
 	float *h_all_input_neurons;	// to store all the input neurons in the data set
 	float *h_input_conv1_synapses_values;
 	float *h_input_conv1_synapses_hessian;
+
+	cl::Buffer d_test;
 
 	cl::Buffer d_all_input_neurons;
 	cl::Buffer d_conv1_neurons;
