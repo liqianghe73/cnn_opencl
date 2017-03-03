@@ -109,9 +109,11 @@ lenet5::lenet5(parameters* _params)
 		size_of_h_input_conv1_synapses = (params->get_int("nb_featuremap_conv1") * params->get_int("nb_featuremap_input") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + params->get_int("nb_featuremap_conv1")); // the last part is for biases of each featuremap in conv1
 	else 
 		size_of_h_input_conv1_synapses = (params->get_int("nb_featuremap_conv1") * params->get_int("nb_featuremap_input") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel"));
+
 	//initialize the synapses
-	h_input_conv1_synapses_values = (float*)malloc(sizeof(float) * size_of_h_input_conv1_synapses); //has bias
-	h_input_conv1_synapses_hessian = (float*)malloc(sizeof(float) * size_of_h_input_conv1_synapses); //has bias
+	h_input_conv1_synapses_values  = new float[size_of_h_input_conv1_synapses]; //has bias
+	h_input_conv1_synapses_hessian = new float[size_of_h_input_conv1_synapses]; //has bias
+
   	for (int fo = 0; fo < conv1_neurons.size(); fo++)
   	{
     		for (int fi = 0; fi < input_neurons.size(); fi++) {
@@ -171,8 +173,9 @@ lenet5::lenet5(parameters* _params)
 			h_conv1_pooling2_bias_weight[fo] = conv1_pooling2.at(fo)->bias_weight; 
 	}
 		
-	h_conv1_pooling2_coefficient = (float*)malloc(sizeof(float) * params->get_int("nb_featuremap_pooling2"));
-	h_conv1_pooling2_coefficient_hessian = (float*)malloc(sizeof(float) * params->get_int("nb_featuremap_pooling2"));
+	h_conv1_pooling2_coefficient = new float[params->get_int("nb_featuremap_pooling2")];
+	h_conv1_pooling2_coefficient_hessian = new float[params->get_int("nb_featuremap_pooling2")];
+
   	for (int fo = 0; fo < pooling2_neurons.size(); fo++)
 		h_conv1_pooling2_coefficient[fo] = conv1_pooling2.at(fo)->coefficient; 
 
@@ -245,9 +248,11 @@ lenet5::lenet5(parameters* _params)
 		size_of_h_pooling2_conv3_synapses = (params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + params->get_int("nb_featuremap_conv3")); // the last part is for biases of each featuremap in conv3
 	else 
 		size_of_h_pooling2_conv3_synapses = (params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel"));
+
 	//initialize the synapses
-	h_pooling2_conv3_synapses_values = (float*)malloc(sizeof(float) * size_of_h_pooling2_conv3_synapses); //has bias
-	h_pooling2_conv3_synapses_hessian = (float*)malloc(sizeof(float) * size_of_h_pooling2_conv3_synapses); //has bias
+	h_pooling2_conv3_synapses_values = new float[size_of_h_pooling2_conv3_synapses]; //has bias
+	h_pooling2_conv3_synapses_hessian = new float[size_of_h_pooling2_conv3_synapses]; //has bias
+
   	for (int fo = 0; fo < conv3_neurons.size(); fo++)
   	{
     		for (int fi = 0; fi < pooling2_neurons.size(); fi++) {
@@ -313,8 +318,9 @@ lenet5::lenet5(parameters* _params)
 			h_conv3_pooling4_bias_weight[fo] = conv3_pooling4.at(fo)->bias_weight; 
 	}
 		
-	h_conv3_pooling4_coefficient = (float*)malloc(sizeof(float) * params->get_int("nb_featuremap_pooling4"));
-	h_conv3_pooling4_coefficient_hessian = (float*)malloc(sizeof(float) * params->get_int("nb_featuremap_pooling4"));
+	h_conv3_pooling4_coefficient = new float[params->get_int("nb_featuremap_pooling4")];
+	h_conv3_pooling4_coefficient_hessian = new float[params->get_int("nb_featuremap_pooling4")];
+
   	for (int fo = 0; fo < pooling4_neurons.size(); fo++)
 		h_conv3_pooling4_coefficient[fo] = conv3_pooling4.at(fo)->coefficient; 
 
@@ -387,9 +393,11 @@ lenet5::lenet5(parameters* _params)
 		size_of_h_pooling4_conv5_synapses = (params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + params->get_int("nb_featuremap_conv5")); // the last part is for biases or hessian of each featuremap in conv5
 	else 
 		size_of_h_pooling4_conv5_synapses = (params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel"));
+
 	//initialize the synapses
-	h_pooling4_conv5_synapses_values = (float*)malloc(sizeof(float) * size_of_h_pooling4_conv5_synapses); //has bias
-	h_pooling4_conv5_synapses_hessian = (float*)malloc(sizeof(float) * size_of_h_pooling4_conv5_synapses); //has bias
+	h_pooling4_conv5_synapses_values = new float[size_of_h_pooling4_conv5_synapses]; //has bias
+	h_pooling4_conv5_synapses_hessian = new float[size_of_h_pooling4_conv5_synapses]; //has bias
+
   	for (int fo = 0; fo < conv5_neurons.size(); fo++)
   	{
     		for (int fi = 0; fi < pooling4_neurons.size(); fi++) {
@@ -461,9 +469,11 @@ lenet5::lenet5(parameters* _params)
 		size_of_h_conv5_hidden6_synapses = (params->get_int("nb_neuron_hidden6") * params->get_int("nb_featuremap_conv5") + params->get_int("nb_neuron_hidden6")); // the last part is for biases of each neuron in hidden6
 	else 
 		size_of_h_conv5_hidden6_synapses = (params->get_int("nb_neuron_hidden6") * params->get_int("nb_featuremap_conv5"));
+
 	//initialize the synapses
-	h_conv5_hidden6_synapses_values = (float*)malloc(sizeof(float) * size_of_h_conv5_hidden6_synapses); //has bias
-	h_conv5_hidden6_synapses_hessian = (float*)malloc(sizeof(float) * size_of_h_conv5_hidden6_synapses); //has bias
+	h_conv5_hidden6_synapses_values = new float[size_of_h_conv5_hidden6_synapses]; //has bias
+	h_conv5_hidden6_synapses_hessian = new float[size_of_h_conv5_hidden6_synapses]; //has bias
+
   	for (int fo = 0; fo < params->get_int("nb_neuron_hidden6"); fo++)
   	{
     		for (int fi = 0; fi < conv5_neurons.size(); fi++) {
@@ -509,9 +519,11 @@ lenet5::lenet5(parameters* _params)
 		size_of_h_hidden6_output_synapses = (params->get_int("nb_neuron_output") * params->get_int("nb_neuron_hidden6") + params->get_int("nb_neuron_output")); // the last part is for biases of each neuron in output
 	else 
 		size_of_h_hidden6_output_synapses = (params->get_int("nb_neuron_output") * params->get_int("nb_neuron_hidden6"));
+
 	//initialize the synapses
-	h_hidden6_output_synapses_values = (float*)malloc(sizeof(float) * size_of_h_hidden6_output_synapses); //has bias
-	h_hidden6_output_synapses_hessian = (float*)malloc(sizeof(float) * size_of_h_hidden6_output_synapses); //has bias
+	h_hidden6_output_synapses_values = new float[size_of_h_hidden6_output_synapses]; //has bias
+	h_hidden6_output_synapses_hessian = new float[size_of_h_hidden6_output_synapses]; //has bias
+
   	for (int fo = 0; fo < params->get_int("nb_neuron_output"); fo++)
   	{
     		for (int fi = 0; fi < params->get_int("nb_neuron_hidden6"); fi++) {
