@@ -12,16 +12,18 @@
 
 //#include <time.h>
 
+
 #include "../lib/net.hh"
 #include "../lib/neurons.hh"
 #include "../lib/synapses.hh"
 #include "../lib/parameters.hh"
 #include "../lib/data.hh"
-#include "../lib/tools.hh"
 #include "../input/data_mnist.hh"
 #include "../subnets/mcp_bprop.hh"
 
 #include "lenet5.hh"
+
+#include "../lib/tools.hh"
 
 using namespace std;
 
@@ -643,7 +645,7 @@ void lenet5::initializeOpenCL()
   //Load program
   if(kernel_source_path == std::string("")) //use binary
   {
-        std::ifstream kernel_binary(kernel_binary_path.c_str(), std::ios::binary);
+        ifstream kernel_binary(kernel_binary_path.c_str(), std::ios::binary);
 
         if ( kernel_binary.fail() )
         {
@@ -661,7 +663,7 @@ void lenet5::initializeOpenCL()
             cout << "The kernel binary has length 0?";
         }
 
-        std::vector<unsigned char> binary_blob(filesize);
+        vector<unsigned char> binary_blob(filesize);
         kernel_binary.read(reinterpret_cast<char*>(&binary_blob[0]), filesize);
         kernel_binary.close();
 
@@ -670,20 +672,19 @@ void lenet5::initializeOpenCL()
    }
   else // use source
   {
-    	std::ifstream input_file(kernel_source_path.c_str());
-    	std::istreambuf_iterator<char> end;
-    	std::string src( std::istreambuf_iterator<char>(input_file), end );
+    	ifstream input_file(kernel_source_path.c_str());
+    	istreambuf_iterator<char> end;
+    	string src( std::istreambuf_iterator<char>(input_file), end );
     	input_file.close();
 
 	cl::Program::Sources source(1, make_pair(src.c_str(),src.length()+1));
         program = cl::Program(context, source);
   }
 
-#if 0
   //Build program
   try
   {
-	program.build(devices);
+	program.build(devices, "-I ./subnets_opencl/");
   	cout << " program.build with binary successful\n";
   }
   catch (cl::Error err) // print build log
@@ -692,7 +693,22 @@ void lenet5::initializeOpenCL()
         cerr << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]);
         throw err;
   }
-#endif
+
+  if(kernel_source_path != std::string("")) {//save binary
+	cl_int err;
+        vector<char *> binaries = program.getInfo<CL_PROGRAM_BINARIES>(&err);
+        vector<size_t> binarySizes = program.getInfo<CL_PROGRAM_BINARY_SIZES>(&err);
+
+        string outfile = kernel_source_path.substr(0, kernel_source_path.find(".cl")) + ".bin";
+
+	if (binaries.size() > 0) {
+    		ofstream out(outfile.c_str(), std::ios::binary);
+    		if (out) {
+        		out.write(binaries[0], binarySizes[0]);
+        		out.close();
+    		}
+	}
+  }
 }
 
 

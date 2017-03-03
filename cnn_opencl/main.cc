@@ -130,7 +130,7 @@ int main(int argc, const char *argv[])
   {
   	nn.train_gpu(40, train, true);
   	//nn.train_gpu(1, train, false);
-  	//nn.test_mnist_gpu(test);
+  	nn.test_mnist_gpu(test);
   }
 
   //nn.dump();
