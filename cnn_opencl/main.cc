@@ -122,15 +122,15 @@ int main(int argc, const char *argv[])
 
   if (f_device == "cpu")
   {
-  	nn.train(40, train, true);
-  	//nn.train(1, train, false);
-  	nn.test_mnist(test);
+  	//nn.train(40, train, true);
+  	nn.train(1, train, false);
+  	//nn.test_mnist(test);
   }
   else if (f_device == "gpu")
   {
-  	nn.train_gpu(40, train, true);
-  	//nn.train_gpu(1, train, false);
-  	nn.test_mnist_gpu(test);
+  	//nn.train_gpu(40, train, true);
+  	nn.train_gpu(1, train, false);
+  	//nn.test_mnist_gpu(test);
   }
 
   //nn.dump();

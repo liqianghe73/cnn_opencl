@@ -18,6 +18,7 @@
 #include "../lib/synapses.hh"
 #include "../lib/parameters.hh"
 #include "../lib/data.hh"
+#include "../lib/tools_gpu.hh"
 #include "../input/data_mnist.hh"
 #include "../subnets/mcp_bprop.hh"
 
@@ -113,7 +114,7 @@ lenet5::lenet5(parameters* _params)
 	//initialize the synapses
 	h_input_conv1_synapses_values  = new float[size_of_h_input_conv1_synapses]; //has bias
 	h_input_conv1_synapses_hessian = new float[size_of_h_input_conv1_synapses]; //has bias
-
+cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl;
   	for (int fo = 0; fo < conv1_neurons.size(); fo++)
   	{
     		for (int fi = 0; fi < input_neurons.size(); fi++) {
@@ -142,6 +143,14 @@ lenet5::lenet5(parameters* _params)
 
 	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
 	queue.finish();
+
+  float *h_input_conv1_synapses_values_dbg  = new float[size_of_h_input_conv1_synapses];
+  queue.enqueueReadBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values_dbg);
+  queue.finish();
+
+  output_data_opencl("h_input_conv1_synapses_values_dbg", h_input_conv1_synapses_values_dbg, size_of_h_input_conv1_synapses);
+  diff_data_opencl("h_input_conv1_synapses_values", "h_input_conv1_synapses_values_dbg", h_input_conv1_synapses_values, h_input_conv1_synapses_values_dbg, size_of_h_input_conv1_synapses);
+
   }  
 
   // - pooling layer P2 -
@@ -944,6 +953,23 @@ void lenet5::load()
     file.close();   
   cout << "--- Load complete ---" << endl;
 
+  	for (int fo = 0; fo < conv1_neurons.size(); fo++)
+  	{
+    		for (int fi = 0; fi < input_neurons.size(); fi++) {
+      			for (int fj = 0; fj < params->get_int("size_y_conv_kernel"); fj++) {
+				for (int fk = 0; fk < params->get_int("size_x_conv_kernel"); fk++) {
+					cout << "<" << fo << "," << fi << "," << fj << "," << fk << "," << input_conv1_synapses.at(fo).at(fi)->values.at(fj).at(fk) << "> ";
+				}
+			}
+    		}
+  	}
+	int size_of_h_input_conv1_synapses;
+	if(in_has_bias) {
+		size_of_h_input_conv1_synapses = (params->get_int("nb_featuremap_conv1") * params->get_int("nb_featuremap_input") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + params->get_int("nb_featuremap_conv1")); // the last part is for biases of each featuremap in conv1
+  		for (int fo = 0; fo < conv1_neurons.size(); fo++)
+			cout << "<" << input_conv1.at(fo)->bias_weight << " ";
+	}
+
   if(use_gpu)
   {
    cout << "--- copy to gpu ---" << endl;
@@ -954,6 +980,7 @@ void lenet5::load()
       			for (int fj = 0; fj < params->get_int("size_y_conv_kernel"); fj++) {
 				for (int fk = 0; fk < params->get_int("size_x_conv_kernel"); fk++) {
 					h_input_conv1_synapses_values[fo * input_neurons.size() * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + fi * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + fj * params->get_int("size_x_conv_kernel") + fk] =  input_conv1_synapses.at(fo).at(fi)->values.at(fj).at(fk);
+					cout << "<" << fo << "," << fi << "," << fj << "," << fk << "," << input_conv1_synapses.at(fo).at(fi)->values.at(fj).at(fk) << "> ";
 				}
 			}
     		}
@@ -961,9 +988,11 @@ void lenet5::load()
 	int size_of_h_input_conv1_synapses;
 	if(in_has_bias) {
 		size_of_h_input_conv1_synapses = (params->get_int("nb_featuremap_conv1") * params->get_int("nb_featuremap_input") * params->get_int("size_y_conv_kernel") * params->get_int("size_x_conv_kernel") + params->get_int("nb_featuremap_conv1")); // the last part is for biases of each featuremap in conv1
-  		for (int fo = 0; fo < conv1_neurons.size(); fo++)
+  		for (int fo = 0; fo < conv1_neurons.size(); fo++) {
 			// the organization is : [ nb_featuremap_conv1 * nb_featuremap_input * size_y_conv_kernel * size_x_conv_kernel + nb_featuremap_conv1
 			h_input_conv1_synapses_values[(size_of_h_input_conv1_synapses - conv1_neurons.size()) + fo] = input_conv1.at(fo)->bias_weight; 
+			cout << "<" << input_conv1.at(fo)->bias_weight << " ";
+		}
 	}
 
 	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
@@ -1108,6 +1137,7 @@ void lenet5::forward(bool _backpropagation)
     for (int ix = 0, ox = 0; ix + params->get_int("size_x_conv_kernel") <=  params->get_int("size_x_input"); ix += params->get_int("step_x_conv"), ox++)
       for (int fo = 0; fo < params->get_int("nb_featuremap_conv1"); fo++)
         input_conv1.at(fo)->forward_prop(ix, iy, ox, oy, _backpropagation);
+
   if (dbg) 
   {
     cout << "Begin dump input_conv1:" << endl;
@@ -1244,7 +1274,7 @@ float lenet5::train(int _nb_epochs, data_set_mnist* _train, bool _use_second_ord
     cout << "epoch "<< epoch << " starts" << endl;
     cout << "global learning rate: " << learning_rate_tmp << endl;
     // call backpropagation, and get error for epoch; 
-    _train->shuffle();
+    //_train->shuffle();
     // Add on 11/18 by junjie
     error = train_back_propagation(_train, _use_second_order);
     // dump error every N epochs;
@@ -1274,7 +1304,8 @@ float lenet5::train_back_propagation(data_set_mnist* train, bool _use_second_ord
   float mse = 0;
   float mis_count = 0;
   //cout << "#rows: " << train->get_size() << " //mlp::train_back_prop" << endl;
-  for (int i = 0; i < train->get_size(); i++) 
+  //for (int i = 0; i < train->get_size(); i++) 
+  for (int i = 0; i < 1; i++) 
   {
     /*
     if(!((i+1)%10000))

@@ -13,6 +13,7 @@
 #include "../lib/parameters.hh"
 #include "../lib/data.hh"
 #include "../lib/tools.hh"
+#include "../lib/tools_gpu.hh"
 #include "../input/data_mnist.hh"
 #include "../subnets/mcp_bprop.hh"
 
@@ -56,8 +57,9 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		);
 
 
-#if 0
   call_pooling_subnet2D_forward_prop_kernel(
+		program,
+		queue,
 		d_pooling2_neurons, 
 		params->get_int("nb_featuremap_pooling2"), 
 		params->get_int("size_y_pooling2"), 
@@ -79,6 +81,7 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		);
 
 
+#if 0
   call_conv_subnet3D_forward_prop_kernel(
 		d_pooling2_neurons, 
 		0,	// the first 
@@ -183,8 +186,8 @@ float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second
 
   if(_use_second_order) hessian_estimation_gpu(_train);
 
-  for (int epoch = 1; epoch <= _nb_epochs; epoch++) 
-  //for (int epoch = 1; epoch <=1; epoch++) 
+  //for (int epoch = 1; epoch <= _nb_epochs; epoch++) 
+  for (int epoch = 1; epoch <=1; epoch++) 
   {
     // shuffle input patterns at each epoch;
     //TODO maybe no need to do shuffle so often ? (time consuming);
@@ -196,7 +199,7 @@ float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second
     cout << "global learning rate: " << learning_rate_tmp << endl;
 
     // call backpropagation, and get error for epoch; 
-    _train->shuffle();
+    //_train->shuffle();
 
     // Add on 11/18 by junjie
     error = train_back_propagation_gpu(_train, _use_second_order);
@@ -232,6 +235,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
 
+cout << "size of input:" << train->get_size() * input_neuron_size << endl;
+
   h_all_input_neurons  = new float[train->get_size() * input_neuron_size];
   h_all_row_outputs    = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
   h_all_output_neurons = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
@@ -243,6 +248,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
     //copy data to host array
     for(int k=0; k<row->inputs.size(); k++) {
+if(i==0 && k==0) cout << "xszie:" << row->inputs.size() << " ysize:" << row->inputs.at(0).size() << endl;
 	for( int kk=0; kk<row->inputs.at(k).size(); kk++)
 		h_all_input_neurons[i * input_neuron_size + k * row->inputs.at(0).size() + kk] = row->inputs.at(k).at(kk);
     }
@@ -251,6 +257,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 	h_all_row_outputs[i * params->get_int("nb_neuron_output") + k] = row->outputs.at(k);
     }
   }
+
+  output_data_opencl_idx("h_all_input_neuron", h_all_input_neurons, train->get_size() * input_neuron_size * sizeof(float), 0, input_neuron_size);
 
   //copy data from host to device
   d_all_input_neurons  = cl::Buffer(context, CL_MEM_READ_ONLY, train->get_size() * input_neuron_size * sizeof(float), NULL, &opencl_err);
@@ -263,8 +271,16 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
   //cout << "error rst:" << tools::oclErrorString(opencl_err) << endl;
   queue.finish();
 
+  float *h_all_input_neurons_dbg  = new float[train->get_size() * input_neuron_size];
+  queue.enqueueReadBuffer(d_all_input_neurons, CL_TRUE, 0, train->get_size() * input_neuron_size * sizeof(float), h_all_input_neurons_dbg);
+  queue.finish();
+
+  //output_data_opencl_idx("h_all_input_neuron_dbg", h_all_input_neurons_dbg, train->get_size() * input_neuron_size * sizeof(float), 0, input_neuron_size);
+  diff_data_opencl("h_all_input_neuron", "h_all_input_neuron_dbg", h_all_input_neurons, h_all_input_neurons_dbg, train->get_size() * input_neuron_size);
+
+
   //for (int i = 0; i < train->get_size(); i++) 
-  for (int i = 0; i < 10; i++) 
+  for (int i = 0; i < 1; i++) 
   {
     // compute all the node outputs for this row;
 
