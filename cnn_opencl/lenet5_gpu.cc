@@ -80,9 +80,9 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv1_pooling2_input_sampledown
 		);
 
-
-#if 0
   call_conv_subnet3D_forward_prop_kernel(
+		program,
+		queue,
 		d_pooling2_neurons, 
 		0,	// the first 
 		params->get_int("nb_featuremap_pooling2"), 
@@ -105,6 +105,8 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		);
 
   call_pooling_subnet2D_forward_prop_kernel(
+		program,
+		queue,
 		d_pooling4_neurons, 
 		params->get_int("nb_featuremap_pooling4"), 
 		params->get_int("size_y_pooling4"), 
@@ -125,8 +127,9 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv3_pooling4_input_sampledown
 		);
 
-
-  call_conv_subnet3D_forward_prop_kernel_p4c5(
+  call_conv_subnet3D_forward_prop_kernel(
+		program,
+		queue,
 		d_pooling4_neurons, 
 		0,
 		params->get_int("nb_featuremap_pooling4"), 
@@ -147,9 +150,36 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_pooling4_conv5_gradients_out,
 		d_pooling4_conv5_second_gradients_out
 		);
-
+/*
+  // optimize using share memory
+  call_conv_subnet3D_forward_prop_kernel_p4c5(
+		program,
+		queue,
+		d_pooling4_neurons, 
+		0,
+		params->get_int("nb_featuremap_pooling4"), 
+		params->get_int("size_y_pooling4"), 
+		params->get_int("size_x_pooling4"),
+		d_pooling4_conv5_synapses_values,
+		in_has_bias,
+		d_conv5_neurons,
+		params->get_int("nb_featuremap_conv5"), 
+		params->get_int("size_y_conv5"), 
+		params->get_int("size_x_conv5"),
+		params->get_int("size_y_conv_kernel"),
+		params->get_int("size_x_conv_kernel"),
+		params->get_int("step_y_conv"), 
+		params->get_int("step_x_conv"),
+		_backpropagation,
+		d_pooling4_conv5_derivatives_out,
+		d_pooling4_conv5_gradients_out,
+		d_pooling4_conv5_second_gradients_out
+		);
+*/
 
   call_mcp_forward_prop_kernel(
+		program,
+		queue,
 		d_hidden6_neurons, 
 		0,
 		params->get_int("nb_neuron_hidden6"), 
@@ -161,8 +191,9 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		d_conv5_hidden6_derivatives_out
 		);
 
-
   call_mcp_forward_prop_kernel(
+		program,
+		queue,
 		d_all_output_neurons, 
 		input_idx,
 		params->get_int("nb_neuron_output"), 
@@ -173,8 +204,6 @@ void lenet5::forward_gpu(bool _backpropagation, int input_idx)
 		_backpropagation,
 		d_hidden6_output_derivatives_out
 		);
-
-#endif
 }
 
 
@@ -235,8 +264,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
   int input_neuron_size = params->get_int("nb_featuremap_input") * params->get_int("size_y_input") * params->get_int("size_x_input");
 
-cout << "size of input:" << train->get_size() * input_neuron_size << endl;
-
   h_all_input_neurons  = new float[train->get_size() * input_neuron_size];
   h_all_row_outputs    = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
   h_all_output_neurons = new float[train->get_size() * params->get_int("nb_neuron_output")]; 
@@ -248,7 +275,6 @@ cout << "size of input:" << train->get_size() * input_neuron_size << endl;
 
     //copy data to host array
     for(int k=0; k<row->inputs.size(); k++) {
-if(i==0 && k==0) cout << "xszie:" << row->inputs.size() << " ysize:" << row->inputs.at(0).size() << endl;
 	for( int kk=0; kk<row->inputs.at(k).size(); kk++)
 		h_all_input_neurons[i * input_neuron_size + k * row->inputs.at(0).size() + kk] = row->inputs.at(k).at(kk);
     }
@@ -258,8 +284,6 @@ if(i==0 && k==0) cout << "xszie:" << row->inputs.size() << " ysize:" << row->inp
     }
   }
 
-  output_data_opencl_idx("h_all_input_neuron", h_all_input_neurons, train->get_size() * input_neuron_size * sizeof(float), 0, input_neuron_size);
-
   //copy data from host to device
   d_all_input_neurons  = cl::Buffer(context, CL_MEM_READ_ONLY, train->get_size() * input_neuron_size * sizeof(float), NULL, &opencl_err);
   d_all_output_neurons = cl::Buffer(context, CL_MEM_READ_WRITE, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
@@ -268,19 +292,10 @@ if(i==0 && k==0) cout << "xszie:" << row->inputs.size() << " ysize:" << row->inp
   opencl_err = queue.enqueueWriteBuffer(d_all_input_neurons, CL_TRUE, 0, train->get_size() * input_neuron_size * sizeof(float), h_all_input_neurons, NULL, &event);
   opencl_err = queue.enqueueWriteBuffer(d_all_row_outputs, CL_TRUE, 0, train->get_size() * params->get_int("nb_neuron_output") * sizeof(float), h_all_row_outputs, NULL, &event);
 
-  //cout << "error rst:" << tools::oclErrorString(opencl_err) << endl;
   queue.finish();
 
-  float *h_all_input_neurons_dbg  = new float[train->get_size() * input_neuron_size];
-  queue.enqueueReadBuffer(d_all_input_neurons, CL_TRUE, 0, train->get_size() * input_neuron_size * sizeof(float), h_all_input_neurons_dbg);
-  queue.finish();
-
-  //output_data_opencl_idx("h_all_input_neuron_dbg", h_all_input_neurons_dbg, train->get_size() * input_neuron_size * sizeof(float), 0, input_neuron_size);
-  diff_data_opencl("h_all_input_neuron", "h_all_input_neuron_dbg", h_all_input_neurons, h_all_input_neurons_dbg, train->get_size() * input_neuron_size);
-
-
-  //for (int i = 0; i < train->get_size(); i++) 
-  for (int i = 0; i < 1; i++) 
+  for (int i = 0; i < train->get_size(); i++) 
+  //for (int i = 0; i < 1; i++) 
   {
     // compute all the node outputs for this row;
 
