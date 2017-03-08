@@ -294,16 +294,17 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
   queue.finish();
 
-  for (int i = 0; i < train->get_size(); i++) 
-  //for (int i = 0; i < 1; i++) 
+  //for (int i = 0; i < train->get_size(); i++) 
+  for (int i = 0; i < 1; i++) 
   {
     // compute all the node outputs for this row;
 
     forward_gpu(true, i);
 
-#if 0
     // - back-propagation -
     call_mcp_compute_gradients_out_kernel(
+						program,
+						queue,
 						d_all_output_neurons, 
 						d_all_row_outputs,
 						i,
@@ -313,6 +314,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 					  );
 
     call_mcp_compute_gradients_in_kernel(
+						program,
+						queue,
 						params->get_int("nb_neuron_hidden6"),		// nin
 						params->get_int("nb_neuron_output"),		// nout
 						d_hidden6_output_gradients_out,			
@@ -322,6 +325,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 					);
 
     call_mcp_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -334,7 +339,10 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_hidden6_output_synapses_values	
 				  );
 
+#if 0
     call_mcp_compute_gradients_in_kernel(
+						program,
+						queue,
 						params->get_int("nb_featuremap_conv5"),		// nin
 						params->get_int("nb_neuron_hidden6"),		// nout
 						d_conv5_hidden6_gradients_out,			
@@ -344,6 +352,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 					);
 
     call_mcp_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -357,6 +367,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 				  );
 
     call_conv_subnet3D_compute_gradients_in_new_kernel(
+						program,
+						queue,
 						params->get_int("nb_featuremap_pooling4"),
 						params->get_int("size_y_pooling4"),
 						params->get_int("size_x_pooling4"),
@@ -375,6 +387,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_conv_subnet3D_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -400,6 +414,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
     if (conv3_pooling4.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
+						program,
+						queue,
 						params->get_int("nb_featuremap_conv3"),
 						params->get_int("size_y_conv3"),
 						params->get_int("size_x_conv3"),
@@ -413,6 +429,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_pooling_subnet2D_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -431,6 +449,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     else if (conv3_pooling4.at(0)->op == "M") {
 
     call_pooling_subnet2D_compute_gradients_in_kernel_M(
+						program,
+						queue,
 						params->get_int("nb_featuremap_pooling4"),
 						params->get_int("size_y_pooling4"),
 						params->get_int("size_x_pooling4"),
@@ -447,6 +467,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
  	tools::error("Wrong operation for pooling layer");
 
     call_conv_subnet3D_compute_gradients_in_new_kernel(
+						program,
+						queue,
 						params->get_int("nb_featuremap_pooling2"),
 						params->get_int("size_y_pooling2"),
 						params->get_int("size_x_pooling2"),
@@ -465,6 +487,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_conv_subnet3D_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -490,6 +514,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 
     if (conv1_pooling2.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
+						program,
+						queue,
 						params->get_int("nb_featuremap_conv1"),
 						params->get_int("size_y_conv1"),
 						params->get_int("size_x_conv1"),
@@ -503,6 +529,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_pooling_subnet2D_update_weights_kernel(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
@@ -521,6 +549,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     else if (conv1_pooling2.at(0)->op == "M") {
 
     call_pooling_subnet2D_compute_gradients_in_kernel_M(
+						program,
+						queue,
 						params->get_int("nb_featuremap_pooling2"),
 						params->get_int("size_y_pooling2"),
 						params->get_int("size_x_pooling2"),
@@ -537,6 +567,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
  	tools::error("Wrong operation for pooling layer");
 
     call_conv_subnet3D_update_weights_kernel_ic1(
+						program,
+						queue,
 						_use_second_order,
 						params->get_float("mu"),
 						params->get_float("learning_rate"),
