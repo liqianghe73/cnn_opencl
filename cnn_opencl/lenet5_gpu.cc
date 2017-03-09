@@ -339,7 +339,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_hidden6_output_synapses_values	
 				  );
 
-#if 0
     call_mcp_compute_gradients_in_kernel(
 						program,
 						queue,
@@ -366,6 +365,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv5_hidden6_synapses_values	
 				  );
 
+#if 0
     call_conv_subnet3D_compute_gradients_in_new_kernel(
 						program,
 						queue,
