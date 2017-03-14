@@ -365,8 +365,8 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_conv5_hidden6_synapses_values	
 				  );
 
-#if 0
     call_conv_subnet3D_compute_gradients_in_new_kernel(
+						devices,
 						program,
 						queue,
 						params->get_int("nb_featuremap_pooling4"),
@@ -412,6 +412,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling4_conv5_synapses_values
 				  );
 
+#if 0
     if (conv3_pooling4.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
 						program,
