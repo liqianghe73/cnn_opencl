@@ -22,7 +22,7 @@
 #include "../subnets_opencl/conv_subnet3D_gpu.hh"
 #include "../subnets_opencl/pooling_subnet2D_gpu.hh"
 #include "../subnets_opencl/mcp_bprop_gpu.hh"
-#include "../lib/subnet2D_gpu.hh"
+#include "../subnets_opencl/subnet2D_gpu.hh"
 #include "../subnets_opencl/gpu_device.hh"
 
 using namespace std;
@@ -238,7 +238,6 @@ float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second
     //if (epoch % 100 == 0) cout << "--- epoch=" << epoch << ", error=" << error << " ---" << endl;
     cout << "epoch " << epoch << " ends"<< endl;
 
-/*
     if(!(epoch%epochs_for_hessian_estimation) && _use_second_order && epoch!=_nb_epochs)
       hessian_estimation_gpu(_train);
 
@@ -249,7 +248,7 @@ float lenet5::train_gpu(int _nb_epochs, data_set_mnist* _train, bool _use_second
       if(learning_rate_tmp < LR_threshold) learning_rate_tmp = LR_threshold;
       params->set_float("learning_rate",learning_rate_tmp);
     }
-*/
+
   } // for epoch
   //cout << "error=" << error << endl;
   return error;
@@ -412,7 +411,6 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_pooling4_conv5_synapses_values
 				  );
 
-#if 0
     if (conv3_pooling4.at(0)->op == "A") {
     call_pooling_subnet2D_compute_gradients_in_kernel_A(
 						program,
@@ -430,6 +428,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_pooling_subnet2D_update_weights_kernel(
+						context,
 						program,
 						queue,
 						_use_second_order,
@@ -468,6 +467,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
  	tools::error("Wrong operation for pooling layer");
 
     call_conv_subnet3D_compute_gradients_in_new_kernel(
+						devices,
 						program,
 						queue,
 						params->get_int("nb_featuremap_pooling2"),
@@ -530,6 +530,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						);
 
     call_pooling_subnet2D_update_weights_kernel(
+						context,
 						program,
 						queue,
 						_use_second_order,
@@ -567,7 +568,7 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
     else
  	tools::error("Wrong operation for pooling layer");
 
-    call_conv_subnet3D_update_weights_kernel_ic1(
+    call_conv_subnet3D_update_weights_kernel(
 						program,
 						queue,
 						_use_second_order,
@@ -593,13 +594,11 @@ float lenet5::train_back_propagation_gpu(data_set_mnist* train, bool _use_second
 						d_input_conv1_synapses_values
 				  );
 
-#endif
   } // for data entries
-/*
+
   mis_count = judgement_gpu(train);
   cout << "mis classification: " << mis_count << endl;
 
-*/
   free(h_all_input_neurons);
   free(h_all_output_neurons);
   free(h_all_row_outputs);
@@ -686,14 +685,17 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
   {
     forward_gpu(true, i);
 
-#if 0
     call_mcp_compute_second_gradients_out_kernel(
+						program,
+						queue,
 						d_hidden6_output_derivatives_out,
 						params->get_int("nb_neuron_output"),
 						d_hidden6_output_second_gradients_out						
 					  );
 
     call_mcp_compute_second_gradients_in_kernel(
+						program,
+						queue,
 						params->get_int("nb_neuron_hidden6"),		// nin
 						params->get_int("nb_neuron_output"),		// nout
 						d_hidden6_output_second_gradients_out,			
@@ -703,6 +705,8 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 					);
 
     call_mcp_compute_update_hessian_kernel(
+						program,
+						queue,
 						nb_sampled_patterns,
 						params->get_int("nb_neuron_hidden6"),		// nin->values.size
 						params->get_int("nb_neuron_output"),		// nout->values.size
@@ -712,6 +716,7 @@ void lenet5::hessian_estimation_gpu(data_set_mnist* train)
 						d_hidden6_output_synapses_hessian
 					);
 
+#if 0
     call_mcp_compute_second_gradients_in_kernel(
 						params->get_int("nb_featuremap_conv5"),		// nin
 						params->get_int("nb_neuron_hidden6"),		// nout
@@ -934,30 +939,28 @@ void lenet5::clear_hessian_information_gpu()
 	int size_y_conv_kernel = params->get_int("size_y_conv_kernel");
 	int size_x_conv_kernel = params->get_int("size_x_conv_kernel");
 
-#if 0
- 	call_clear_3d_hessian(d_hidden6_output_synapses_hessian, nb_neuron_hidden6, 1, 1, 0, nb_neuron_output, 1, 1);
+						
+ 	call_clear_hessian(program, queue, d_hidden6_output_synapses_hessian, nb_neuron_hidden6 * nb_neuron_output);
 
- 	call_clear_3d_hessian(d_conv5_hidden6_synapses_hessian, nb_featuremap_conv5, 1, 1, 0, nb_neuron_hidden6, 1, 1);
+ 	call_clear_hessian(program, queue, d_conv5_hidden6_synapses_hessian, nb_featuremap_conv5 * nb_neuron_hidden6);
  
- 	call_clear_3d_hessian(d_pooling4_conv5_synapses_hessian, nb_featuremap_pooling4, size_x_conv_kernel, size_y_conv_kernel, in_has_bias, nb_featuremap_conv5, 1, 1);
+ 	call_clear_hessian(program, queue, d_pooling4_conv5_synapses_hessian, nb_featuremap_pooling4 * size_x_conv_kernel * size_y_conv_kernel * nb_featuremap_conv5 + (in_has_bias ? nb_featuremap_conv5 : 0));
 
  	if(in_has_bias) {
- 		call_clear_hessian(d_conv3_pooling4_bias_weight_hessian, nb_featuremap_pooling4);
+ 		call_clear_hessian(program, queue, d_conv3_pooling4_bias_weight_hessian, nb_featuremap_pooling4);
  	}
 
- 	call_clear_hessian(d_conv3_pooling4_coefficient_hessian, nb_featuremap_pooling4);
+ 	call_clear_hessian(program, queue, d_conv3_pooling4_coefficient_hessian, nb_featuremap_pooling4);
 
- 	call_clear_3d_hessian(d_pooling2_conv3_synapses_hessian, nb_featuremap_pooling2, size_x_conv_kernel, size_y_conv_kernel, in_has_bias, nb_featuremap_conv3, 1, 1);
+ 	call_clear_hessian(program, queue, d_pooling2_conv3_synapses_hessian, nb_featuremap_pooling2 * size_x_conv_kernel * size_y_conv_kernel * nb_featuremap_conv3 + (in_has_bias ? nb_featuremap_conv3 : 0));
 
  	if(in_has_bias) {
- 		call_clear_hessian(d_conv1_pooling2_bias_weight_hessian, nb_featuremap_pooling2);
+ 		call_clear_hessian(program, queue, d_conv1_pooling2_bias_weight_hessian, nb_featuremap_pooling2);
  	}
 
- 	call_clear_hessian(d_conv1_pooling2_coefficient_hessian, nb_featuremap_pooling2);
+ 	call_clear_hessian(program, queue, d_conv1_pooling2_coefficient_hessian, nb_featuremap_pooling2);
 
- 	call_clear_3d_hessian(d_input_conv1_synapses_hessian, nb_featuremap_input, size_x_conv_kernel, size_y_conv_kernel, in_has_bias, nb_featuremap_conv1, 1, 1);
-
-#endif
+ 	call_clear_hessian(program, queue, d_input_conv1_synapses_hessian, nb_featuremap_input * size_x_conv_kernel * size_y_conv_kernel * nb_featuremap_conv1 + (in_has_bias ? nb_featuremap_conv1 : 0));
 }
 
 
@@ -967,7 +970,7 @@ int lenet5::judgement_gpu(data_set_mnist* dataset)
   int label;
   int mis_count = 0;
   int idx;
-  float mse =0;
+  float mse =0.0;
 
   opencl_err = queue.enqueueReadBuffer(d_all_output_neurons, CL_TRUE, 0, dataset->get_size() * params->get_int("nb_neuron_output") * sizeof(float), h_all_output_neurons, NULL, &event);
   queue.finish();

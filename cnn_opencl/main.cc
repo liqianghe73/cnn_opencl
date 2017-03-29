@@ -129,7 +129,8 @@ int main(int argc, const char *argv[])
   else if (f_device == "gpu")
   {
   	//nn.train_gpu(40, train, true);
-  	nn.train_gpu(1, train, false);
+  	//nn.train_gpu(1, train, false);
+  	nn.train_gpu(1, train, true);
   	//nn.test_mnist_gpu(test);
   }
 
