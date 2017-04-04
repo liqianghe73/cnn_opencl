@@ -141,8 +141,8 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_input_conv1_second_gradients_out_sum = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv1") * sizeof(float), NULL, &opencl_err);
 	d_input_conv1_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv1") * params->get_int("size_y_conv1") * params->get_int("size_x_conv1") * sizeof(float), NULL, &opencl_err);
 
-	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_FALSE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
+	//queue.finish();
 
 /*
   float *h_input_conv1_synapses_values_dbg  = new float[size_of_h_input_conv1_synapses];
@@ -201,9 +201,9 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_conv1_pooling2_input_sampledown = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
-	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_FALSE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_FALSE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
+	//queue.finish();
   }
 
   // - convolutional layer C3 -
@@ -295,8 +295,8 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_pooling2_conv3_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("size_y_conv3") * params->get_int("size_x_conv3") * sizeof(float), NULL, &opencl_err);
 	d_pooling2_conv3_fin_temp = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv3") * params->get_int("nb_featuremap_pooling2") * params->get_int("size_y_pooling2") * params->get_int("size_x_pooling2") * sizeof(float), NULL, &opencl_err);
 
-	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_TRUE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_FALSE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
+	//queue.finish();
   }  
 
   // - pooling layer P4 -
@@ -346,9 +346,9 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_conv3_pooling4_input_sampledown = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
-	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_FALSE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_FALSE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
+	//queue.finish();
   }
 
   // - convolutional layer C5 -
@@ -441,8 +441,8 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_pooling4_conv5_fin_temp = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_featuremap_conv5") * params->get_int("nb_featuremap_pooling4") * params->get_int("size_y_pooling4") * params->get_int("size_x_pooling4") * sizeof(float), NULL, &opencl_err);
 
 
-	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_TRUE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_FALSE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
+	//queue.finish();
   }  
 
   // - hidden layer H6 -
@@ -509,9 +509,9 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_conv5_hidden6_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_hidden6") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	opencl_err = queue.enqueueWriteBuffer(d_hidden6_neurons, CL_TRUE, 0, size_of_h_hidden6_neurons * sizeof(float), h_hidden6_neurons, NULL, &event);
-	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_TRUE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_neurons, CL_FALSE, 0, size_of_h_hidden6_neurons * sizeof(float), h_hidden6_neurons, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_FALSE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
+	//queue.finish();
   }
 
   // - output layer -
@@ -558,8 +558,8 @@ cout << "size of input conv synapses:" << size_of_h_input_conv1_synapses << endl
 	d_hidden6_output_second_gradients_out = cl::Buffer(context, CL_MEM_READ_WRITE, params->get_int("nb_neuron_output") * sizeof(float), NULL, &opencl_err);
 
 	// copy data to gpu
-	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
-	queue.finish();
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_FALSE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
+	//queue.finish();
   }
   cout << "--- created all instants of cnn ---" << endl;
   cout << "--- leave enet5 constructor ---" << endl;
@@ -1000,7 +1000,7 @@ void lenet5::load()
 		}
 	}
 
-	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_TRUE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_input_conv1_synapses_values, CL_FALSE, 0, size_of_h_input_conv1_synapses * sizeof(float), h_input_conv1_synapses_values, NULL, &event);
 
 	if(in_has_bias) {
   		for (int fo = 0; fo < pooling2_neurons.size(); fo++)
@@ -1010,8 +1010,8 @@ void lenet5::load()
   	for (int fo = 0; fo < pooling2_neurons.size(); fo++)
 		h_conv1_pooling2_coefficient[fo] = conv1_pooling2.at(fo)->coefficient; 
 
-	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
-	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_bias_weight, CL_FALSE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv1_pooling2_coefficient, CL_FALSE, 0, params->get_int("nb_featuremap_pooling2") * sizeof(float), h_conv1_pooling2_coefficient, NULL, &event);
 
 	int size_of_h_pooling2_conv3_synapses;
 	if(in_has_bias) 
@@ -1037,7 +1037,7 @@ void lenet5::load()
 		}
 	}
 
-	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_TRUE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_pooling2_conv3_synapses_values, CL_FALSE, 0, size_of_h_pooling2_conv3_synapses * sizeof(float), h_pooling2_conv3_synapses_values, NULL, &event);
 
 	if(in_has_bias) {
   		for (int fo = 0; fo < pooling4_neurons.size(); fo++)
@@ -1047,8 +1047,8 @@ void lenet5::load()
   	for (int fo = 0; fo < pooling4_neurons.size(); fo++)
 		h_conv3_pooling4_coefficient[fo] = conv3_pooling4.at(fo)->coefficient; 
 
-	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
-	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_TRUE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_bias_weight, CL_FALSE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_bias_weight, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv3_pooling4_coefficient, CL_FALSE, 0, params->get_int("nb_featuremap_pooling4") * sizeof(float), h_conv3_pooling4_coefficient, NULL, &event);
 
 	int size_of_h_pooling4_conv5_synapses;
 	if(in_has_bias) 
@@ -1074,7 +1074,7 @@ void lenet5::load()
 		}
 	}
 
-	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_TRUE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_pooling4_conv5_synapses_values, CL_FALSE, 0, size_of_h_pooling4_conv5_synapses * sizeof(float), h_pooling4_conv5_synapses_values, NULL, &event);
 
 	int size_of_h_conv5_hidden6_synapses; 
 	if(in_has_bias) 
@@ -1093,7 +1093,7 @@ void lenet5::load()
 		}
 	}
 
-	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_TRUE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_conv5_hidden6_synapses_values, CL_FALSE, 0, size_of_h_conv5_hidden6_synapses * sizeof(float), h_conv5_hidden6_synapses_values, NULL, &event);
 
 	int size_of_h_hidden6_output_synapses; 
 	if(in_has_bias) 
@@ -1112,10 +1112,10 @@ void lenet5::load()
 		}
 	}
 
-	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_TRUE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
+	opencl_err = queue.enqueueWriteBuffer(d_hidden6_output_synapses_values, CL_FALSE, 0, size_of_h_hidden6_output_synapses * sizeof(float), h_hidden6_output_synapses_values, NULL, &event);
 
 
-	queue.finish();
+	//queue.finish();
   }
 }
 
@@ -1279,7 +1279,7 @@ float lenet5::train(int _nb_epochs, data_set_mnist* _train, bool _use_second_ord
     cout << "epoch "<< epoch << " starts" << endl;
     cout << "global learning rate: " << learning_rate_tmp << endl;
     // call backpropagation, and get error for epoch; 
-    //_train->shuffle();
+    _train->shuffle();
     // Add on 11/18 by junjie
     error = train_back_propagation(_train, _use_second_order);
     // dump error every N epochs;
@@ -1309,8 +1309,8 @@ float lenet5::train_back_propagation(data_set_mnist* train, bool _use_second_ord
   float mse = 0;
   float mis_count = 0;
   //cout << "#rows: " << train->get_size() << " //mlp::train_back_prop" << endl;
-  //for (int i = 0; i < train->get_size(); i++) 
-  for (int i = 0; i < 1; i++) 
+  for (int i = 0; i < train->get_size(); i++) 
+  //for (int i = 0; i < 1; i++) 
   {
     /*
     if(!((i+1)%10000))
@@ -1461,6 +1461,7 @@ void lenet5::hessian_estimation(data_set_mnist* train)
   cout << "commencing computing hessian information" << endl;
   clear_hessian_information();
   for(int i=0; i<nb_sampled_patterns; i++)
+  //for(int i=0; i<1; i++)
   {
     int rank = rand() % train->rows.size();
     data_row_mnist* row = train->rows.at(rank);
